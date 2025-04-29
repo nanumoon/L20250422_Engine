@@ -1,6 +1,10 @@
 #include "Engine.h"
 #include "Input.h"
 #include "World.h"
+#include "Renderer.h"
+
+
+UEngine* UEngine::Instance = nullptr;
 
 UEngine::UEngine()/* : World(nullptr)*/ //엔진 만들면서 월드 초기화
 {
@@ -14,16 +18,29 @@ UEngine::~UEngine()
 	Terminate();
 }
 
-void UEngine::Initialize()
+void UEngine::Initialize(std::string filename)
 {
+	SDL_Init(SDL_INIT_VIDEO);
+
+	Window = SDL_CreateWindow("Engine", 800, 600, SDL_WINDOW_OPENGL);
+
 	InputDevice = new UInput();
 	World = new UWorld();
+	World->Load(filename);
+	URenderer::GetInstance();
 }
 
 void UEngine::Run()
 {
-	while (true)
+	while (IsRunning)
 	{
+		SDL_PollEvent(&Event);
+		switch (Event.type)
+		{
+		case SDL_EVENT_QUIT:
+			IsRunning = false;
+			break;
+		}
 		//1Frame
 		Input();
 		Tick();
@@ -44,13 +61,16 @@ void UEngine::Terminate()
 		delete InputDevice;
 		InputDevice = nullptr;
 	}
+
+	SDL_DestroyWindow(Window);
+	SDL_Quit();
 }
 
 void UEngine::Input()
 {
 	InputDevice->Tick();
 	//Engine has a InputDevice
-	//키보드, 마우스, 터치, 자이로 센스...
+	//키보드, 마우스, 조이스틱, 터치, 자이로 센스...
 }
 
 void UEngine::Tick()
